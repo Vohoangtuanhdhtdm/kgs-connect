@@ -8,6 +8,13 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import IndexPredict from "./pages/predict-home/IndexPredict";
+import Marketplace from "./pages/market/Marketplace";
+import { AppLayout } from "./layout/AppLayout";
+import DashboardMarketPlace from "./pages/market/DashboardMarketPlace";
+import SubmitListing from "./pages/market/SubmitListing";
+import Admin from "./pages/Admin";
+import PropertyDetail from "./pages/market/PropertyDetail";
 
 const queryClient = new QueryClient();
 
@@ -19,15 +26,30 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Auth />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route element={<AppLayout />}>
+              {/* <Route path="/" element={<Auth />} /> */}
+              <Route path="/" element={<Marketplace />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/property/:id" element={<PropertyDetail />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/member" element={<DashboardMarketPlace />} />
+              <Route path="/member/submit" element={<SubmitListing />} />
+              <Route
+                path="/predict"
+                element={
+                  <ProtectedRoute>
+                    <IndexPredict />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

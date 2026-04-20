@@ -26,9 +26,21 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground">
               {user?.name ?? user?.email}
             </span>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="rounded-xl">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="rounded-xl"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => navigate("/predict")}
+              className="rounded-xl bg-green-400 text-white hover:bg-green-500"
+            >
+              Định giá ngay
             </Button>
           </div>
         </div>
@@ -36,16 +48,25 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-12">
         <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.name ?? "User"}</h1>
-          <p className="mt-2 text-muted-foreground">Your real estate valuation dashboard</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome, {user?.name ?? "User"}
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Your real estate valuation dashboard
+          </p>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {["Active Valuations", "Completed Reports", "Pending Reviews"].map((title, i) => (
-              <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <p className="text-sm text-muted-foreground">{title}</p>
-                <p className="mt-2 text-3xl font-bold text-foreground">0</p>
-              </div>
-            ))}
+            {["Active Valuations", "Completed Reports", "Pending Reviews"].map(
+              (title, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+                >
+                  <p className="text-sm text-muted-foreground">{title}</p>
+                  <p className="mt-2 text-3xl font-bold text-foreground">0</p>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </main>
