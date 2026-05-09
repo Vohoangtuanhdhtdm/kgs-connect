@@ -1,11 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import IndexPredict from "./pages/predict-home/IndexPredict";
@@ -18,6 +17,12 @@ import PropertyDetail from "./pages/market/PropertyDetail";
 
 const queryClient = new QueryClient();
 
+// Hàm hỗ trợ: Chặn người dùng đã đăng nhập không cho vào trang Auth nữa
+const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,20 +32,25 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              {/* <Route path="/" element={<Auth />} /> */}
-              <Route path="/" element={<Marketplace />} />
+              {/* ========================================== */}
+              {/* 1. ROUTES CÔNG KHAI (Ai cũng xem được)       */}
+              {/* ========================================== */}
+              <Route path="/" element={<Marketplace />} />{" "}
+              {/* Trang chủ là Chợ */}
+              <Route path="/property/:id" element={<PropertyDetail />} />
+              {/* Route Đăng nhập (Chỉ dành cho người chưa đăng nhập) */}
               <Route
-                path="/dashboard"
+                path="/auth"
                 element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                  <PublicOnlyRoute>
+                    <Auth />
+                  </PublicOnlyRoute>
                 }
               />
-              <Route path="/property/:id" element={<PropertyDetail />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/member" element={<DashboardMarketPlace />} />
-              <Route path="/member/submit" element={<SubmitListing />} />
+              {/* ========================================== */}
+              {/* 2. ROUTES THÀNH VIÊN (Member & Admin)        */}
+              {/* ========================================== */}
+              {/* Tính năng dự đoán AI */}
               <Route
                 path="/predict"
                 element={
@@ -49,7 +59,37 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              {/* Quản lý tin đăng & Đăng tin của Member */}
+              <Route
+                path="/member"
+                element={
+                  <ProtectedRoute allowedRoles={["Member", "Admin"]}>
+                    <DashboardMarketPlace />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/member/submit"
+                element={
+                  <ProtectedRoute allowedRoles={["Member", "Admin"]}>
+                    <SubmitListing />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ========================================== */}
+              {/* 3. ROUTE QUẢN TRỊ VIÊN (Chỉ Admin)           */}
+              {/* ========================================== */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={["Admin"]}>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
+
+            {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

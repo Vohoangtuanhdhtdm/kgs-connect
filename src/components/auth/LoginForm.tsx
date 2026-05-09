@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
@@ -6,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 
 const LoginForm = () => {
   const { login } = useAuth();
@@ -18,30 +20,33 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Please fill in all fields");
+      toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("https://localhost:7129/api/Account/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await api.post("/Account/login", { email, password });
+      const data = res.data;
+
+      login(data.token, data.refreshToken, {
+        name: data.username || email,
+        email: email,
+        roles: data.roles || [],
       });
 
-      if (!res.ok) {
-        const msg = res.status === 401 ? "Invalid email or password" : "Login failed. Please try again.";
+      toast.success("Đăng nhập thành công!");
+      navigate("/");
+    } catch (error: any) {
+      if (error.response) {
+        const msg =
+          error.response.status === 401
+            ? "Email hoặc mật khẩu không chính xác"
+            : "Đăng nhập thất bại. Vui lòng thử lại.";
         toast.error(msg);
-        return;
+      } else {
+        toast.error("Không thể kết nối đến máy chủ");
       }
-
-      const data = await res.json();
-      login(data.token, { name: data.name ?? email, email });
-      toast.success("Welcome back!");
-      navigate("/dashboard");
-    } catch {
-      toast.error("Unable to connect to the server");
     } finally {
       setLoading(false);
     }
@@ -81,12 +86,21 @@ const LoginForm = () => {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full rounded-xl" size="lg">
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-xl"
+        size="lg"
+      >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
       </Button>
     </form>
