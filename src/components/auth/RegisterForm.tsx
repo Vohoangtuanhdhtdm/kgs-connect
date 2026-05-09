@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -19,37 +20,51 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      toast.error("Please fill in all fields");
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim()
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("Mật khẩu xác nhận không khớp");
       return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("https://localhost:7129/api/Account/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+      await api.post("/Account/register", {
+        name,
+        email,
+        password,
+        confirmPassword,
+        role: "Member",
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        toast.error(data?.message ?? "Registration failed. Please try again.");
-        return;
-      }
-
-      toast.success("Account created successfully! Please log in.");
+      toast.success("Tạo tài khoản thành công! Vui lòng đăng nhập.");
       onSuccess();
-    } catch {
-      toast.error("Unable to connect to the server");
+    } catch (error: any) {
+      if (error.response) {
+        const data = error.response.data;
+        let errorMsg = "Đăng ký thất bại. Vui lòng thử lại.";
+
+        if (typeof data === "string") {
+          errorMsg = data;
+        } else if (data.message) {
+          errorMsg = data.message;
+        }
+
+        toast.error(errorMsg);
+      } else {
+        toast.error("Không thể kết nối đến máy chủ");
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +76,13 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         <Label htmlFor="reg-name">Full Name</Label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input id="reg-name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl pl-10" />
+          <Input
+            id="reg-name"
+            placeholder="John Doe"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="rounded-xl pl-10"
+          />
         </div>
       </div>
 
@@ -69,7 +90,14 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         <Label htmlFor="reg-email">Email</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input id="reg-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl pl-10" />
+          <Input
+            id="reg-email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="rounded-xl pl-10"
+          />
         </div>
       </div>
 
@@ -85,8 +113,16 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-xl pl-10 pr-10"
           />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
@@ -106,8 +142,17 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         </div>
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full rounded-xl" size="lg">
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-xl"
+        size="lg"
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          "Create Account"
+        )}
       </Button>
     </form>
   );

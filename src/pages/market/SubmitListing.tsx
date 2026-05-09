@@ -104,7 +104,9 @@ export default function SubmitListing() {
       toast.error("Vui lòng thêm ít nhất 1 ảnh");
       return;
     }
+
     const fd = new FormData();
+
     Object.entries(values).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
     });

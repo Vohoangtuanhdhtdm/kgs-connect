@@ -1,50 +1,49 @@
 import { api, USE_MOCKS } from "@/lib/api";
-import { mockPublicListings, MOCK_LISTINGS } from "@/lib/mockListings";
 import type {
   Listing,
   ListingFilters,
   PaginatedResponse,
 } from "@/types/listing";
 
+// 1. Lấy danh sách tin đăng công khai với filter & pagination
 export async function fetchPublicListings(
-  filters: ListingFilters
+  filters: ListingFilters,
 ): Promise<PaginatedResponse<Listing>> {
-  if (USE_MOCKS) {
-    await new Promise((r) => setTimeout(r, 350));
-    return mockPublicListings(filters);
-  }
-  const { data } = await api.get<PaginatedResponse<Listing>>("/public-listings", {
-    params: filters,
-  });
+  const { data } = await api.get<PaginatedResponse<Listing>>(
+    "/Properties/public-listings",
+    {
+      params: filters,
+    },
+  );
   return data;
 }
 
-export async function fetchListingById(id: string): Promise<Listing | undefined> {
-  if (USE_MOCKS) {
-    await new Promise((r) => setTimeout(r, 200));
-    return MOCK_LISTINGS.find((l) => l.id === id);
-  }
-  const { data } = await api.get<Listing>(`/public-listings/${id}`);
+// 2. Lấy chi tiết tin đăng
+export async function fetchListingById(
+  id: string,
+): Promise<Listing | undefined> {
+  const { data } = await api.get<Listing>(`/Properties/${id}`);
   return data;
 }
 
+// 3. Đăng tin mới (Member)
 export async function submitListing(formData: FormData): Promise<Listing> {
-  if (USE_MOCKS) {
-    await new Promise((r) => setTimeout(r, 700));
-    return {
-      id: `L-${Math.floor(Math.random() * 9000) + 1000}`,
-      title: String(formData.get("Title") ?? "Untitled"),
-      price: Number(formData.get("Price") ?? 0),
-      city: String(formData.get("City") ?? ""),
-      district: String(formData.get("District") ?? ""),
-      area: Number(formData.get("Area") ?? 0),
-      propertyType: (formData.get("PropertyType") as Listing["propertyType"]) ?? "House",
-      img: [],
-      status: "Pending",
-    };
-  }
-  const { data } = await api.post<Listing>("/listings", formData, {
+  const { data } = await api.post<Listing>("/Properties", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return data;
+}
+
+// 4. Lấy danh sách tin cá nhân (Member Dashboard)
+export async function fetchMyListings(): Promise<Listing[]> {
+  const { data } = await api.get<Listing[]>("/Properties/my-listings");
+  return data;
+}
+
+// 5. Admin lấy tin chờ duyệt
+export async function fetchPendingListings(): Promise<Listing[]> {
+  const { data } = await api.get<Listing[]>(
+    "/Properties/admin/pending-listings",
+  );
   return data;
 }
