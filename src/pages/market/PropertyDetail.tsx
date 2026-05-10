@@ -14,22 +14,23 @@ import {
   Building,
   Maximize2,
   MessageSquare,
-  Map,
   User,
   BadgeCheck,
 } from "lucide-react";
 import { formatVnd, formatArea } from "@/lib/format";
 import { useState } from "react";
+import { LocationDisplay } from "./LocationDisplay"; // Đảm bảo đường dẫn này đúng với dự án của bạn
 
 export default function PropertyDetail() {
   const { id = "" } = useParams();
+
   const { data, isLoading } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => fetchListingById(id),
   });
+
   const [active, setActive] = useState(0);
 
-  // 1. Cải thiện Loading State chân thực hơn với bố cục thực tế
   if (isLoading) {
     return (
       <div className="container grid gap-8 py-8 lg:grid-cols-[1fr_340px]">
@@ -63,6 +64,14 @@ export default function PropertyDetail() {
     );
   }
 
+  // Ép kiểu an toàn, tọa độ mặc định là Bến Cát, Bình Dương nếu data trống
+  const lat = Number(data.latitude) || 11.1683;
+  const lng = Number(data.longitude) || 106.5986;
+
+  const fullAddress = [data.addressDetail, data.ward, data.district, data.city]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div className="container grid gap-8 py-8 lg:grid-cols-[1fr_340px]">
       {/* CỘT CHÍNH */}
@@ -70,15 +79,20 @@ export default function PropertyDetail() {
         {/* Phần Hình Ảnh */}
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <div className="group relative aspect-[16/10] bg-muted">
-            <img
-              src={data.img[active]}
-              alt={data.title}
-              className="h-full w-full object-cover transition-opacity duration-300"
-            />
+            {data.img && data.img.length > 0 ? (
+              <img
+                src={data.img[active]}
+                alt={data.title}
+                className="h-full w-full object-cover transition-opacity duration-300"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                Không có hình ảnh
+              </div>
+            )}
           </div>
 
-          {/* Cải thiện: Cuộn ngang cho thumbnail để không bị ép kích thước khi có quá nhiều ảnh */}
-          {data.img.length > 1 && (
+          {data.img && data.img.length > 1 && (
             <div className="flex gap-2 overflow-x-auto bg-muted/30 p-3 scrollbar-hide">
               {data.img.map((src, i) => (
                 <button
@@ -117,9 +131,7 @@ export default function PropertyDetail() {
           </h1>
           <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground sm:items-center">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
-            <span>
-              {data.addressDetail}, {data.ward}, {data.district}, {data.city}
-            </span>
+            <span>{fullAddress}</span>
           </div>
           <div className="mt-6 flex items-baseline gap-4 rounded-lg bg-muted/50 p-4 border border-border/50">
             <span className="text-3xl font-extrabold text-primary">
@@ -180,19 +192,16 @@ export default function PropertyDetail() {
           </div>
         </div>
 
-        {/* Bản đồ */}
+        {/* BẢN ĐỒ */}
         <div>
           <h2 className="mb-4 text-xl font-semibold tracking-tight">
             Vị trí trên bản đồ
           </h2>
-          <div className="flex aspect-[16/7] items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/30 text-muted-foreground shadow-inner">
-            <div className="flex flex-col items-center gap-2">
-              <Map className="h-8 w-8 text-muted-foreground/50" />
-              <span className="text-sm font-medium">
-                Bản đồ đang được cập nhật
-              </span>
-            </div>
-          </div>
+          <LocationDisplay
+            position={[lat, lng]}
+            title={data.title}
+            address={fullAddress}
+          />
         </div>
       </div>
 
@@ -200,7 +209,6 @@ export default function PropertyDetail() {
       <aside className="lg:sticky lg:top-24 lg:h-fit mt-8 lg:mt-0">
         <Card className="shadow-lg border-primary/10">
           <CardContent className="space-y-6 p-6">
-            {/* Thông tin đại lý */}
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <User className="h-7 w-7" />
@@ -220,15 +228,14 @@ export default function PropertyDetail() {
                 className="w-full text-base h-11 shadow-md transition-transform hover:-translate-y-0.5"
                 size="lg"
               >
-                <Phone className="mr-2 h-5 w-5" />
+                <Phone className="mr-2 h-5 w-5" />{" "}
                 {data.agentPhone ?? "Liên hệ ngay"}
               </Button>
               <Button
                 variant="outline"
                 className="w-full h-11 text-muted-foreground hover:text-foreground"
               >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Gửi tin nhắn
+                <MessageSquare className="mr-2 h-4 w-4" /> Gửi tin nhắn
               </Button>
             </div>
 
@@ -243,7 +250,6 @@ export default function PropertyDetail() {
   );
 }
 
-// 3. Cải thiện component Stat: Thêm background và layout dạng khối để nhìn rõ ràng hơn
 function Stat({
   icon,
   label,

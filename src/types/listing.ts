@@ -46,6 +46,8 @@ export interface Listing {
   createdAt?: string;
   agentName?: string;
   agentPhone?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface PaginatedResponse<T> {
