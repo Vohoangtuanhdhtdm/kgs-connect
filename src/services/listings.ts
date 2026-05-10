@@ -1,4 +1,4 @@
-import { api, USE_MOCKS } from "@/lib/api";
+import { api } from "@/lib/api";
 import type {
   Listing,
   ListingFilters,
@@ -46,4 +46,9 @@ export async function fetchPendingListings(): Promise<Listing[]> {
     "/Properties/admin/pending-listings",
   );
   return data;
+}
+
+//6 Xóa tin đăng (Member)
+export async function deleteListing(id: string | number): Promise<void> {
+  await api.delete(`/Properties/${id}`);
 }

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Clock,
@@ -7,18 +7,46 @@ import {
   XCircle,
   MapPin,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchMyListings } from "@/services/listings";
+import { fetchMyListings, deleteListing } from "@/services/listings"; // Import thêm deleteListing
 import { formatVnd } from "@/util/Helper";
 
 export default function DashboardMarketPlace() {
+  const queryClient = useQueryClient();
+
   const { data: listings, isLoading } = useQuery({
     queryKey: ["my-listings"],
     queryFn: fetchMyListings,
   });
+
+  // Khởi tạo Mutation cho chức năng Xóa
+  const deleteMutation = useMutation({
+    mutationFn: deleteListing,
+    onSuccess: () => {
+      // Invalidate query để bảng dữ liệu tự động tải lại mà không cần F5
+      queryClient.invalidateQueries({ queryKey: ["my-listings"] });
+      // Gợi ý: Có thể thêm Toast thông báo thành công ở đây (ví dụ: toast.success("Đã xóa!"))
+    },
+    onError: (error) => {
+      console.error("Lỗi khi xóa:", error);
+      alert("Không thể xóa tin đăng. Có thể bạn không có quyền thao tác!");
+    },
+  });
+
+  // Hàm xử lý xác nhận xóa
+  const handleDelete = (id: number | string) => {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn xóa tin đăng này? Mọi dữ liệu và hình ảnh sẽ bị xóa vĩnh viễn.",
+      )
+    ) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -96,7 +124,8 @@ export default function DashboardMarketPlace() {
           {listings.map((listing) => (
             <Card
               key={listing.id}
-              className="overflow-hidden transition-all hover:shadow-md"
+              // Thêm class "group" để bắt sự kiện hover cho nút xóa
+              className="group overflow-hidden transition-all hover:shadow-md relative"
             >
               <div className="relative aspect-video bg-muted">
                 {listing.img && listing.img.length > 0 ? (
@@ -110,6 +139,25 @@ export default function DashboardMarketPlace() {
                     Không có ảnh
                   </div>
                 )}
+
+                {/* Nút Xóa: Đặt góc trên bên trái, ẩn đi và chỉ hiện khi hover vào Card */}
+                <div className="absolute left-2 top-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8 shadow-sm"
+                    onClick={() => handleDelete(listing.id)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending &&
+                    deleteMutation.variables === listing.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
                 <div className="absolute right-2 top-2">
                   {getStatusBadge(listing.status)}
                 </div>
@@ -127,8 +175,10 @@ export default function DashboardMarketPlace() {
                     {listing.district}, {listing.city}
                   </span>
                 </div>
-                <div className="mt-3 font-bold text-primary">
-                  {formatVnd(listing.price)}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="font-bold text-primary">
+                    {formatVnd(listing.price)}
+                  </div>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   Đăng ngày:{" "}
