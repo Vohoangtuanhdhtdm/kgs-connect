@@ -14,6 +14,8 @@ import DashboardMarketPlace from "./pages/market/DashboardMarketPlace";
 import SubmitListing from "./pages/market/SubmitListing";
 import Admin from "./pages/Admin";
 import PropertyDetail from "./pages/market/PropertyDetail";
+import MyAssetsDashboard from "./pages/my-property/MyAssetsDashboard";
+import { AddAssetForm } from "./pages/my-property/AddAssetForm";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,22 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <IndexPredict />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="my-property"
+                element={
+                  <ProtectedRoute>
+                    <MyAssetsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="my-property/add"
+                element={
+                  <ProtectedRoute>
+                    <AddAssetForm />
                   </ProtectedRoute>
                 }
               />
