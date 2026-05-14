@@ -37,6 +37,12 @@ export function Navbar() {
       icon: ShieldCheck,
       show: user?.roles?.includes("Admin"),
     }, // Chỉ Admin
+    {
+      to: "my-property",
+      label: "Tài sản của tôi",
+      icon: Building2,
+      show: isAuthenticated,
+    },
   ];
 
   return (
